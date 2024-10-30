@@ -1,0 +1,64 @@
+#install ubuntu
+wsl --install
+
+#install java
+sudo apt install  openjdk-11-jdk-headless
+
+#install kafka in ubuntu
+wget https://archive.apache.org/dist/kafka/3.0.0/kafka_2.13-3.0.0.tgz
+tar xzf kafka_2.13-3.0.0.tgz
+sudo mv kafka_2.13-3.0.0 /
+
+
+#open new terminal for zookeeper
+cd /kafka_2.13-3.0.0/bin
+./zookeeper-server-start.sh ../config/zookeeper.properties
+
+#to start zookeeper
+/kafka_2.13-3.0.0/bin/zookeeper-server-start.sh /kafka_2.13-3.0.0/config/zookeeper.properties
+
+
+#open new terminal for kafka broker
+ cd /kafka_2.13-3.0.0/bin
+./kafka-server-start.sh ../config/server.properties
+
+
+#open new terminal for creating topic 
+cd ~/kafka_2.13-3.0.0/bin
+./kafka-topics.sh --create --topic test-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+
+#To send messages to the topic, open a new terminal and use the Kafka producer
+./kafka-console-producer.sh --topic test-topic --bootstrap-server localhost:9092
+
+#After running this, you can start typing messages, and each line will be sent to the test-topic.
+
+
+#In another terminal, start a Kafka consumer to read messages from the topic:
+./kafka-console-consumer.sh --topic test-topic --bootstrap-server localhost:9092 --from-beginning
+
+
+#how to delete the whole msgs from consumer 
+
+#Option 1: Delete the Topic
+./kafka-topics.sh --delete --topic test-topic --bootstrap-server localhost:9092
+#This will delete all messages in the topic and reset it, so consumers will have no messages to consume.
+
+#Option 2: Use the kafka-delete-records.sh Tool
+echo '{
+  "partitions": [
+    {
+      "topic": "test-topic",
+      "partition": 0,
+      "offset": -1  #Here, setting "offset": -1 will delete all messages in the specified partition (in this case, partition 0).
+    }
+  ],
+  "version": 1
+}' > delete-records.json
+
+./kafka-delete-records.sh --bootstrap-server localhost:9092 --offset-json-file delete-records.json
+#This will delete all messages in test-topic. Ensure that you replace "test-topic" and "partition": 0 if you have multiple partitions or a different topic name.
+
+#how to delete from producer
+./kaftopics.sh --delete --topic test-topic --bootstrap-server localhost:9092
+
